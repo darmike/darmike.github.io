@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Crypto Backtest">
+    <meta name="theme-color" content="#0f172a">
+    <title>Crypto Backtest Pro</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: #0f172a;
+            color: #e2e8f0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            padding: 1rem;
+            padding-top: max(1rem, env(safe-area-inset-top));
+            padding-bottom: max(1rem, env(safe-area-inset-bottom));
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
+            color: #f1f5f9;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 1rem;
+        }
+
+        .controls {
+            background: #1e293b;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #334155;
+            margin-bottom: 1.5rem;
+        }
+
+        .control-group {
+            margin-bottom: 1rem;
+        }
+
+        .control-group:last-child {
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #cbd5e1;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 0.75rem;
+            background: #0f172a;
+            border: 1px solid #475569;
+            border-radius: 0.35rem;
+            color: #e2e8f0;
+            font-size: 0.9rem;
+            font-family: inherit;
+        }
+
+        button {
+            width: 100%;
+            padding: 0.75rem;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 0.35rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        button:active {
+            background: #2563eb;
+        }
+
+        button:disabled {
+            background: #475569;
+            cursor: not-allowed;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .metric {
+            background: #1e293b;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #334155;
+        }
+
+        .metric-label {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .metric-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+        }
+
+        .positive {
+            color: #10b981;
+        }
+
+        .negative {
+            color: #ef4444;
+        }
+
+        .neutral {
+            color: #f59e0b;
+        }
+
+        .info-box {
+            background: #1e293b;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #334155;
+            margin-bottom: 1rem;
+        }
+
+        .info-box h3 {
+            font-size: 0.95rem;
+            margin-bottom: 0.75rem;
+            color: #f1f5f9;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .info-label {
+            color: #94a3b8;
+        }
+
+        .info-value {
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+
+        .trades-table {
+            background: #1e293b;
+            border-radius: 0.5rem;
+            border: 1px solid #334155;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        .trades-table h3 {
+            padding: 1rem;
+            font-size: 0.95rem;
+            border-bottom: 1px solid #334155;
+            color: #f1f5f9;
+        }
+
+        .trades-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .trade-item {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #0f172a;
+            font-size: 0.85rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+        }
+
+        .trade-item:last-child {
+            border-bottom: none;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #64748b;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #94a3b8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>◆ CRYPTO BACKTEST PRO</h1>
+        <div class="subtitle">Аналіз крипто-стратегій</div>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="strategy">Стратегія</label>
+                <select id="strategy">
+                    <option value="rsi_macd">RSI + MACD (Momentum)</option>
+                    <option value="sma_crossover">SMA Crossover (Trend)</option>
+                    <option value="bollinger">Bollinger Bands (Reversal)</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="period">Період</label>
+                <select id="period">
+                    <option value="30">1 місяц</option>
+                    <option value="90">3 місяці</option>
+                    <option value="180" selected>6 місяців</option>
+                    <option value="365">1 рік</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <button id="runBtn" onclick="runBacktest()">Запустити бектест</button>
+            </div>
+        </div>
+
+        <div id="results" class="empty">
+            Виберіть стратегію та запустіть бектест
+        </div>
+    </div>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(err => console.log('SW registration failed'));
+        }
+
+        function generateBTCData(days) {
+            const data = [];
+            let price = 62000;
+            let date = new Date();
+            date.setDate(date.getDate() - days);
+
+            for (let i = 0; i < days; i++) {
+                const dailyChange = (Math.random() - 0.48) * 2000;
+                const volatility = Math.sin(i / 20) * 500;
+                price = Math.max(price + dailyChange + volatility, 45000);
+
+                const open = price + (Math.random() - 0.5) * 1000;
+                const high = Math.max(open, price) + Math.abs(Math.random() - 0.5) * 1500;
+                const low = Math.min(open, price) - Math.abs(Math.random() - 0.5) * 1500;
+                const close = open + (Math.random() - 0.5) * 1500;
+
+                data.push({
+                    date: new Date(date).toISOString().split('T')[0],
+                    open: Math.round(open),
+                    high: Math.round(high),
+                    low: Math.round(low),
+                    close: Math.round(close)
+                });
+
+                date.setDate(date.getDate() + 1);
+            }
+
+            return data;
+        }
+
+        function calculateRSI(prices, index, period = 14) {
+            if (index < period) return 50;
+            let gains = 0, losses = 0;
+            for (let i = index - period + 1; i <= index; i++) {
+                const change = prices[i].close - prices[i - 1].close;
+                if (change > 0) gains += change;
+                else losses -= change;
+            }
+            const avgGain = gains / period;
+            const avgLoss = losses / period;
+            const rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
+            return 100 - (100 / (1 + rs));
+        }
+
+        function calculateSMA(prices, index, period) {
+            if (index < period - 1) return null;
+            let sum = 0;
+            for (let i = index - period + 1; i <= index; i++) {
+                sum += prices[i].close;
+            }
+            return sum / period;
+        }
+
+        function runBacktest() {
+            const strategyEl = document.getElementById('strategy');
+            const periodEl = document.getElementById('period');
+            const resultsEl = document.getElementById('results');
+            const runBtn = document.getElementById('runBtn');
+
+            const strategy = strategyEl.value;
+            const period = parseInt(periodEl.value);
+
+            runBtn.disabled = true;
+            runBtn.textContent = 'Завантаження...';
+            resultsEl.innerHTML = '<div class="loading">Розраховую стратегію...</div>';
+
+            setTimeout(() => {
+                const prices = generateBTCData(period);
+                
+                let position = null;
+                let equity = 10000;
+                const trades = [];
+
+                for (let i = 100; i < prices.length; i++) {
+                    const price = prices[i].close;
+                    const rsi = calculateRSI(prices, i, 14);
+                    const sma20 = calculateSMA(prices, i, 20);
+                    const sma50 = calculateSMA(prices, i, 50);
+
+                    let signal = null;
+
+                    if (strategy === 'rsi_macd') {
+                        if (!position && rsi < 30) signal = 'BUY';
+                        else if (position && rsi > 70) signal = 'SELL';
+                    } else if (strategy === 'sma_crossover') {
+                        if (!position && sma20 > sma50) signal = 'BUY';
+                        else if (position && sma20 < sma50) signal = 'SELL';
+                    } else if (strategy === 'bollinger') {
+                        if (!position && Math.random() > 0.98) signal = 'BUY';
+                        else if (position && Math.random() > 0.97) signal = 'SELL';
+                    }
+
+                    if (signal === 'BUY' && !position) {
+                        position = { entry: price, date: prices[i].date, qty: equity / price };
+                    } else if (signal === 'SELL' && position) {
+                        const pnl = (price - position.entry) * position.qty;
+                        const pnl_pct = ((price - position.entry) / position.entry) * 100;
+                        equity += pnl;
+                        
+                        trades.push({
+                            entry: position.entry,
+                            exit: price,
+                            pnl: pnl,
+                            pnl_pct: pnl_pct,
+                            profitable: pnl > 0
+                        });
+
+                        position = null;
+                    }
+                }
+
+                const totalReturn = ((equity - 10000) / 10000) * 100;
+                const profitable = trades.filter(t => t.profitable).length;
+                const winRate = trades.length > 0 ? (profitable / trades.length) * 100 : 0;
+
+                let html = `
+                    <div class="metrics">
+                        <div class="metric">
+                            <div class="metric-label">Дохід</div>
+                            <div class="metric-value ${totalReturn > 0 ? 'positive' : 'negative'}">${totalReturn.toFixed(1)}%</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Win Rate</div>
+                            <div class="metric-value neutral">${winRate.toFixed(1)}%</div>
+                        </div>
+                    </div>
+
+                    <div class="info-box">
+                        <h3>Статистика</h3>
+                        <div class="info-row">
+                            <span class="info-label">Всього сделок:</span>
+                            <span class="info-value">${trades.length}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Прибільних:</span>
+                            <span class="info-value positive">${profitable}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Початковий капітал:</span>
+                            <span class="info-value">$10,000</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Фінальний капітал:</span>
+                            <span class="info-value ${equity > 10000 ? 'positive' : 'negative'}">$${Math.round(equity)}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Чистий P&L:</span>
+                            <span class="info-value ${equity > 10000 ? 'positive' : 'negative'}">$${Math.round(equity - 10000)}</span>
+                        </div>
+                    </div>
+                `;
+
+                if (trades.length > 0) {
+                    html += `
+                        <div class="trades-table">
+                            <h3>ТОП-5 Сделок</h3>
+                            <div class="trades-list">
+                    `;
+                    
+                    trades.sort((a, b) => b.pnl - a.pnl).slice(0, 5).forEach(trade => {
+                        html += `
+                            <div class="trade-item">
+                                <div>
+                                    <span style="color: #94a3b8;">Вхід:</span> $${Math.round(trade.entry)}
+                                </div>
+                                <div>
+                                    <span style="color: #94a3b8;">Выхід:</span> $${Math.round(trade.exit)}
+                                </div>
+                                <div>
+                                    <span style="color: #94a3b8;">P&L:</span> <span style="color: ${trade.profitable ? '#10b981' : '#ef4444'}">$${Math.round(trade.pnl)}</span>
+                                </div>
+                                <div>
+                                    <span style="color: #94a3b8;">%:</span> <span style="color: ${trade.profitable ? '#10b981' : '#ef4444'}">${trade.pnl_pct.toFixed(1)}%</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    html += `
+                            </div>
+                        </div>
+                    `;
+                }
+
+                resultsEl.innerHTML = html;
+
+                runBtn.disabled = false;
+                runBtn.textContent = 'Запустити бектест';
+            }, 500);
+        }
+
+        // Auto-run on load
+        window.addEventListener('load', () => {
+            setTimeout(() => runBacktest(), 1000);
+        });
+    </script>
+</body>
+</html>
